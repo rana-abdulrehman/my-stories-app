@@ -1,4 +1,3 @@
-// src/pages/LandingPage.tsx
 import React from 'react';
 import { Container, Typography, Card, CardContent } from '@mui/material';
 
