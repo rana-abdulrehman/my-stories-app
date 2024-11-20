@@ -2,6 +2,7 @@ import './App.css';
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
         <Route path="/create-post" element={<CreatePostPage />} />
         <Route path="/admin-board" element={<AdminBoard />} />
       </Routes>
+      <Footer />
     </Router>
   );
 };

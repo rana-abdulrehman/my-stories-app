@@ -1,10 +1,10 @@
 // src/components/Navbar.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import useStore from '../../store/useStore';
+import useStory from '../../story/useStory';
 
 const Navbar: React.FC = () => {
-    const { user, setUser } = useStore();
+    const { user, setUser } = useStory();
 
     const handleLogout = () => {
         setUser(null);
