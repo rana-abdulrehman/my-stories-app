@@ -4,6 +4,7 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const validate = require('../middleware/validate');
 const { postSchema } = require('../validation/schemas');
+const sanitizeHtml = require('sanitize-html');
 
 const router = express.Router();
 
@@ -17,10 +18,18 @@ const authenticate = (req, res, next) => {
   });
 };
 
+const sanitizeContent = (content) => {
+  return sanitizeHtml(content, {
+    allowedTags: [], 
+    allowedAttributes: {}, 
+  });
+};
+
 router.post('/create', authenticate, validate(postSchema), async (req, res) => {
   try {
     const { title, content } = req.body;
-    const post = new Post({ title, content, author: req.userId });
+    const sanitizedContent = sanitizeContent(content);
+    const post = new Post({ title, content: sanitizedContent, author: req.userId, status: 'pending' });
     await post.save();
     res.status(201).json({ message: 'Post created successfully', post });
   } catch (error) {
@@ -28,7 +37,16 @@ router.post('/create', authenticate, validate(postSchema), async (req, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.userId }).populate('author', 'name');
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/approved', async (req, res) => {
   try {
     const posts = await Post.find({ status: 'approved' }).populate('author', 'name');
     res.json(posts);
@@ -37,10 +55,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/admin', authenticate, async (req, res) => {
+router.get('/pending', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
-    if (!user.isAdmin) return res.status(403).json({ error: 'Access denied' });
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const posts = await Post.find({ status: 'pending' }).populate('author', 'name');
     res.json(posts);
   } catch (error) {
@@ -50,21 +70,69 @@ router.get('/admin', authenticate, async (req, res) => {
 
 router.put('/approve/:id', authenticate, async (req, res) => {
   try {
+    const { id } = req.params;
     const user = await User.findById(req.userId);
-    if (!user.isAdmin) return res.status(403).json({ error: 'Access denied' });
-    const post = await Post.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const post = await Post.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
+   
     res.json({ message: 'Post approved', post });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error approving post:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 router.put('/disapprove/:id', authenticate, async (req, res) => {
   try {
+    const { id } = req.params;
     const user = await User.findById(req.userId);
-    if (!user.isAdmin) return res.status(403).json({ error: 'Access denied' });
-    const post = await Post.findByIdAndUpdate(req.params.id, { status: 'disapproved' }, { new: true });
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const post = await Post.findByIdAndUpdate(id, { status: 'disapproved' }, { new: true });
+   
     res.json({ message: 'Post disapproved', post });
+  } catch (error) {
+    console.error('Error disapproving post:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.delete('/delete/:id', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findOneAndDelete({ _id: req.params.id, author: req.userId });
+   
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/edit/:id', authenticate, async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const sanitizedContent = sanitizeContent(content);
+    const post = await Post.findOneAndUpdate(
+      { _id: req.params.id, author: req.userId },
+      { title, content: sanitizedContent },
+      { new: true }
+    );
+
+    res.json({ message: 'Post updated successfully', post });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:id', authenticate, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate('author', 'name');
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    res.json(post);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
