@@ -1,31 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { UserContext } from '../../context/UserContext';
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    image: string; 
+  };
+}
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login } = useContext(UserContext);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); 
+    setError(null);
 
-    interface response{
-      email : string;
-      passwaord : string;
-    }
     try {
-      const response : any  = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post<LoginResponse>('http://localhost:5000/api/auth/login', {
         email,
         password,
       });
-      console.log(response.data);
-      localStorage.setItem('token', response.data.token);
-      navigate('/dashboard'); 
+      const { token, user } = response.data;
+      const userWithToken = { ...user, token }; 
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userWithToken));
+      login(userWithToken);
+
+      if (user.role === 'admin') {
+        navigate('/admin-board');
+      } else {
+        navigate('/create-post');
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || 'An unexpected error occurred.');
+      toast.error(error.response?.data?.error || 'Wrong Email or Password');
       console.error('Login Error:', error.response || error);
     }
   };
@@ -111,22 +131,6 @@ const LoginPage: React.FC = () => {
                   className="w-full shadow-xl py-2.5 px-4 text-sm tracking-wide rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
                 >
                   Sign in
-                </button>
-              </div>
-              <div className="space-x-6 flex justify-center mt-6">
-                <button type="button" className="border-none outline-none">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32px"
-                    className="inline"
-                    viewBox="0 0 512 512"
-                  >
-                    <path
-                      fill="#fbbd00"
-                      d="M120 256c0-25.367 6.989-49.13 19.131-69.477v-86.308H52.823C18.568 144.703 0 198.922 0 256s18.568 111.297 52.823 155.785h86.308v-86.308C126.989 305.13 120 281.367 120 256z"
-                      data-original="#fbbd00"
-                    />
-                  </svg>
                 </button>
               </div>
             </form>

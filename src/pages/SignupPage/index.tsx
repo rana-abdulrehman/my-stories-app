@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+>>>>>>> feature/backend
 
 const SignupPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+<<<<<<< HEAD
   const [success, setSuccess] = useState<string | null>(null);
+=======
+>>>>>>> feature/backend
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+<<<<<<< HEAD
     setSuccess(null);
+=======
+>>>>>>> feature/backend
 
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signup', {
@@ -22,10 +33,16 @@ const SignupPage: React.FC = () => {
         password,
       });
 
+<<<<<<< HEAD
       setSuccess('Account created successfully. Redirecting to login...');
       console.log(response.data);
 
       
+=======
+      toast.success('Account created successfully. Redirecting to login...');
+      console.log(response.data);
+
+>>>>>>> feature/backend
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -65,6 +82,7 @@ const SignupPage: React.FC = () => {
             <div>
               <label className="text-gray-800 text-xs block mb-2">Full Name</label>
               <div className="relative flex items-center">
+<<<<<<< HEAD
                 <input
                   name="name"
                   type="text"
@@ -74,11 +92,15 @@ const SignupPage: React.FC = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
+=======
+                <input name="name" type="text" required className="w-full bg-transparent text-sm border-b border-gray-300 focus:border-blue-500 px-2 py-3 outline-none" placeholder="Enter name" value={name} onChange={(e) => setName(e.target.value)} />
+>>>>>>> feature/backend
               </div>
             </div>
             <div className="mt-6">
               <label className="text-gray-800 text-xs block mb-2">Email</label>
               <div className="relative flex items-center">
+<<<<<<< HEAD
                 <input
                   name="email"
                   type="text"
@@ -88,11 +110,15 @@ const SignupPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+=======
+                <input name="email" type="text" required className="w-full bg-transparent text-sm border-b border-gray-300 focus:border-blue-500 px-2 py-3 outline-none" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+>>>>>>> feature/backend
               </div>
             </div>
             <div className="mt-6">
               <label className="text-gray-800 text-xs block mb-2">Password</label>
               <div className="relative flex items-center">
+<<<<<<< HEAD
                 <input
                   name="password"
                   type="password"
@@ -102,6 +128,9 @@ const SignupPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+=======
+                <input name="password" type="password" required className="w-full bg-transparent text-sm border-b border-gray-300 focus:border-blue-500 px-2 py-3 outline-none" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} />
+>>>>>>> feature/backend
               </div>
             </div>
             <div className="flex items-center mt-6">
@@ -125,6 +154,7 @@ const SignupPage: React.FC = () => {
               </label>
             </div>
             <div className="mt-12">
+<<<<<<< HEAD
               <button
                 type="submit"
                 className="w-full py-3 px-6 text-sm tracking-wider font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white focus:outline-none"
@@ -140,6 +170,12 @@ const SignupPage: React.FC = () => {
                   Login here
                 </a>
               </p>
+=======
+              <button type="submit" className="w-full py-3 px-6 text-sm tracking-wider font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white focus:outline-none">
+                Create an account
+              </button>
+              <p className="text-sm mt-6 text-gray-800">Already have an account? <a href="login" className="text-blue-500 font-semibold hover:underline ml-1">Login here</a></p>
+>>>>>>> feature/backend
             </div>
           </form>
         </div>
