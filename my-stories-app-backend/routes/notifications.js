@@ -25,8 +25,9 @@ router.get('/', authenticate, async (req, res) => {
 
 router.put('/:id/read', authenticate, async (req, res) => {
   try {
-    const notification = await Notification.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
-    res.json(notification);
+   await Notification.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
+   const notification = await Notification.find({ userId: req.userId }).sort('-createdAt');
+   res.json(notification);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

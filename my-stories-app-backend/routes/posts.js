@@ -4,20 +4,11 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const validate = require('../middleware/validate');
+const authenticate = require('../middleware/authenticate');
 const { postSchema } = require('../validation/schemas');
 const sanitizeHtml = require('sanitize-html');
 
 const router = express.Router();
-
-const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: 'Invalid token' });
-    req.userId = decoded.userId;
-    next();
-  });
-};
 
 const sanitizeContent = (content) => {
   return sanitizeHtml(content, {
@@ -30,10 +21,10 @@ router.post('/create', authenticate, validate(postSchema), async (req, res) => {
   try {
     const { title, content } = req.body;
     const sanitizedContent = sanitizeContent(content);
-    const post = new Post({ title, content: sanitizedContent, author: req.userId, status: 'pending' });
+    const post = new Post({ title, content: sanitizedContent, author: req.user._id, status: 'pending' });
     await post.save();
 
-    // Create notification for admin
+    // notification admin
     const adminUser = await User.findOne({ role: 'admin' });
     const notification = new Notification({
       userId: adminUser._id,
@@ -51,7 +42,7 @@ router.post('/create', authenticate, validate(postSchema), async (req, res) => {
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    const posts = await Post.find({ author: req.userId }).populate('author', 'name');
+    const posts = await Post.find({ author: req.user._id }).populate('author', 'name').sort('-createdAt');
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -60,7 +51,7 @@ router.get('/', authenticate, async (req, res) => {
 
 router.get('/approved', async (req, res) => {
   try {
-    const posts = await Post.find({ status: 'approved' }).populate('author', 'name');
+    const posts = await Post.find({ status: 'approved' }).populate('author', 'name').sort('-createdAt');
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,7 +60,7 @@ router.get('/approved', async (req, res) => {
 
 router.get('/pending', authenticate, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.user._id);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
@@ -83,13 +74,14 @@ router.get('/pending', authenticate, async (req, res) => {
 router.put('/approve/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.user._id);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
     const post = await Post.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
+    const posts = await Post.find({ status: 'pending' }).populate('author', 'name');
 
-    // Create notification for user
+    // notification user
     const notification = new Notification({
       userId: post.author,
       type: 'postApproved',
@@ -98,7 +90,7 @@ router.put('/approve/:id', authenticate, async (req, res) => {
     });
     await notification.save();
 
-    res.json({ message: 'Post approved', post });
+    res.json({ message: 'Post approved', posts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -107,13 +99,14 @@ router.put('/approve/:id', authenticate, async (req, res) => {
 router.put('/disapprove/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.user._id);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
     const post = await Post.findByIdAndUpdate(id, { status: 'disapproved' }, { new: true });
+    const posts = await Post.find({ status: 'pending' }).populate('author', 'name');
 
-    // Create notification for user
+    // notification user
     const notification = new Notification({
       userId: post.author,
       type: 'postDisapproved',
@@ -122,7 +115,7 @@ router.put('/disapprove/:id', authenticate, async (req, res) => {
     });
     await notification.save();
 
-    res.json({ message: 'Post disapproved', post });
+    res.json({ message: 'Post disapproved', posts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -130,8 +123,9 @@ router.put('/disapprove/:id', authenticate, async (req, res) => {
 
 router.delete('/delete/:id', authenticate, async (req, res) => {
   try {
-    const post = await Post.findOneAndDelete({ _id: req.params.id, author: req.userId });
-    res.json({ message: 'Post deleted successfully' });
+    const post = await Post.findOneAndDelete({ _id: req.params.id, author: req.user._id });
+    const posts = await Post.find({ author: req.user._id }).populate('author', 'name').sort('-createdAt');
+    res.json({ message: 'Post deleted successfully' , posts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -142,10 +136,14 @@ router.put('/edit/:id', authenticate, async (req, res) => {
     const { title, content } = req.body;
     const sanitizedContent = sanitizeContent(content);
     const post = await Post.findOneAndUpdate(
-      { _id: req.params.id, author: req.userId },
+      { _id: req.params.id, author: req.user._id },
       { title, content: sanitizedContent },
       { new: true }
     );
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
 
     res.json({ message: 'Post updated successfully', post });
   } catch (error) {
