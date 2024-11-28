@@ -41,6 +41,8 @@ db.once('open', async () => {
   }
 });
 
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);

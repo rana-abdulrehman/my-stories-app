@@ -16,6 +16,7 @@ export interface Story {
     };
     status: 'approved' | 'pending' | 'rejected';
 };
+
 export interface StoryState {
     user: User | null;
     setUser: (user: User | null) => void;
@@ -33,7 +34,13 @@ export interface LandingStory {
     content: string;
     createdAt: string;
     author: {
-      name: string;
-      image: string;
+        name: string;
+        image: string;
     };
-  }
+}
+
+
+export interface StoryFormData {
+    title: string;
+    content: string;
+}
