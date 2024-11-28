@@ -1,13 +1,12 @@
 import { Story, StoryFormData } from '@/types';
-import { useContext, useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { UserContext } from '../../context/UserContext';
-import { FetchNotificationsApi, FetchPostByIdApi, FetchUserPostsApi } from '../../endPoints/get.endpoints';
-import { DeletePostApi } from '../../endPoints/delete.endpoints';
 import { createPost, updatePost } from '../../api';
 import Notifications from '../../components/Notifications';
-import { RichTextEditor} from '../CreatePostPage/RichTextEditor';
+import { UserContext } from '../../context/UserContext';
+import { DeletePostApi } from '../../endPoints/delete.endpoints';
+import { FetchNotificationsApi, FetchPostByIdApi, FetchUserPostsApi } from '../../endPoints/get.endpoints';
 import { StoryCard } from '../CreatePostPage/StoryCard';
 
 const CreatePostPage = () => {
@@ -36,11 +35,14 @@ const CreatePostPage = () => {
     },
   });
 
+  const editorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (token) {
       FetchNotificationsApi({ token })
-        .then((response:any) => {
+        .then((response: any) => {
           setNotifications(response.data);
+          console.log(response.data)
         })
         .catch((error) => {
           console.error('Error:', error);
@@ -57,18 +59,10 @@ const CreatePostPage = () => {
   }, [token]);
 
   const onSubmit = async (data: StoryFormData) => {
-    const plainTextContent = data.content
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/<(\/)?span[^>]*>/gi, '')
-      .replace(/<(\/)?strong>/gi, '')
-      .replace(/<(\/)?em>/gi, '')
-      .replace(/<(\/)?u>/gi, '');
-
     try {
       const postData = {
         title: data.title,
-        content: plainTextContent,
+        content: data.content, //
         author: user?.id || '',
       };
 
@@ -79,7 +73,7 @@ const CreatePostPage = () => {
       const newStory: Story = {
         _id: response._id,
         title: data.title,
-        content: plainTextContent,
+        content: data.content, //
         author: {
           name: user?.name || '',
           image: user?.image || '',
@@ -93,7 +87,7 @@ const CreatePostPage = () => {
         toast.success('Post updated successfully!');
         setEditingId(null);
       } else {
-        setStories([...stories, newStory]);
+        setStories([newStory, ...stories]);
         toast.success('Post created successfully!');
       }
 
@@ -103,32 +97,40 @@ const CreatePostPage = () => {
     }
   };
 
-  const handleEditPost = async (postId: string) => {
+  const handleEditPost = (postId: string) => {
     setIsLoading((prev) => ({ ...prev, edit: true }));
-    try {
-      const response = await FetchPostByIdApi({ token, postId });
-      const post = response.data;
-      setValue('title', post.title);
-      setValue('content', post.content);
-      setEditingId(postId);
-      toast.success('Post loaded for editing');
-    } catch (error) {
-      toast.error('Unable to load post for editing');
-    } finally {
+      FetchPostByIdApi({ token, postId })
+      .then((response)=>{
+        const post = response.data;
+        setValue('title', post.title);
+        setValue('content', post.content);
+        setEditingId(postId);
+        toast.success('Post loaded for editing');
+      }).catch(error =>{    
+        toast.error('Unable to load post for editing');
+      }).finally(()=> {
       setIsLoading((prev) => ({ ...prev, edit: false }));
-    }
+    })
   };
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = (postId: string) => {
     setIsLoading((prev) => ({ ...prev, delete: true }));
-    try {
-      const response : any = await DeletePostApi({ token, postId });
+    DeletePostApi({ token, postId })
+    .then((response : any)=>{
       setStories(response.data.posts);
       toast.success('Post deleted successfully!');
-    } catch (error) {
+    }).catch((error)=>{
       toast.error('Unable to delete post');
-    } finally {
+    }).finally(()=>{
       setIsLoading((prev) => ({ ...prev, delete: false }));
+    })
+
+  };
+  const unreadNotificationsCount = notifications.filter((notification: any) => !notification.read).length;
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    if (editorRef.current) {
+      setValue('content', editorRef.current.innerHTML);
     }
   };
 
@@ -147,7 +149,7 @@ const CreatePostPage = () => {
         >
           Notification
           <span className="inline-flex items-center justify-center w-4 h-4 ml-2 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
-            {notifications.filter((notification) => notification.read === 'false').length}
+            {unreadNotificationsCount}
           </span>
         </button>
       </div>
@@ -169,9 +171,8 @@ const CreatePostPage = () => {
                 {...field}
                 type="text"
                 placeholder="Title"
-                className={`w-full p-2 border rounded ${
-                  errors.title ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full p-2 border rounded ${errors.title ? 'border-red-500' : 'border-gray-300'
+                  }`}
               />
             )}
           />
@@ -180,18 +181,42 @@ const CreatePostPage = () => {
           )}
         </div>
 
-        <Controller
-          name="content"
-          control={control}
-          rules={{ required: 'Content is required' }}
-          render={({ field }) => (
-            <RichTextEditor
-              value={field.value}
-              onChange={field.onChange}
-              error={!!errors.content}
+        <div className="space-y-2">
+          <div className="space-x-2">
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={handleInput}
+              className={`w-full p-2 border rounded min-h-[100px] outline-none ${errors.content ? 'border-red-500' : 'border-gray-300'
+                }`}
+              dangerouslySetInnerHTML={{ __html: control._formValues.content }}
             />
-          )}
-        />
+            <div className='space-y-2 space-x-2'>
+              <button
+                type="button"
+                onClick={() => document.execCommand('bold', false)}
+                className="bg-gray-200 px-4 py-2 rounded"
+              >
+                Bold
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('italic', false)}
+                className="bg-gray-200 px-4 py-2 rounded"
+              >
+                Italic
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('underline', false)}
+                className="bg-gray-200 px-4 py-2 rounded"
+              >
+                Underline
+              </button>
+            </div>
+          </div>
+
+        </div>
         {errors.content && (
           <p className="text-red-500 text-sm">{errors.content.message}</p>
         )}
@@ -221,4 +246,3 @@ const CreatePostPage = () => {
 };
 
 export default CreatePostPage;
-

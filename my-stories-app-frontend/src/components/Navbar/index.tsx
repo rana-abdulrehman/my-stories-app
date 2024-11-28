@@ -22,16 +22,20 @@ const Navbar: React.FC = () => {
         </a>
         <div className="space-x-4">
           <Link to="/" className="mr-5 text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Home</Link>
+
           {user ? (
-            <>
-              {user.role === 'admin' && (
-                <Link to="/admin-board" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Admin Board</Link>
-              )}
-              {user.role !== 'admin' && (
-                <Link to="/create-post" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Create Post</Link>
-              )}
-              <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded">Logout</button>
-            </>
+           <>
+           {user && user.role === 'admin' && (
+             <>
+               <Link to="/admin-board" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Admin Board</Link>
+               <Link to="/create-post" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Create Post</Link>
+             </>
+           )}
+           {user && user.role !== 'admin' && (
+             <Link to="/create-post" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Create Post</Link>
+           )}
+           <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded">Logout</button>
+         </>
           ) : (
             <>
               <Link to="/signup" className="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0">Sign Up

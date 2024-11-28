@@ -1,7 +1,6 @@
 import { Story } from '@/types';
 import { format } from 'date-fns';
 
-
 interface StoryCardProps {
   story: Story;
   onEdit: (id: string) => void;
@@ -16,7 +15,10 @@ export const StoryCard = ({ story, onEdit, onDelete, isLoading }: StoryCardProps
   return (
     <div className="border p-4 mb-4">
       <h3 className="text-xl font-semibold">{story.title}</h3>
-      <p className="text-gray-700">{story.content}</p>
+      <div
+        className="text-gray-700"
+        dangerouslySetInnerHTML={{ __html: story.content }}
+      />
       <div className="flex items-center gap-3 mt-4">
         <p className="text-xs text-gray-400">BY {story.author.name || 'Unknown'}</p>
         <span className="text-sm text-gray-400">
@@ -53,4 +55,3 @@ export const StoryCard = ({ story, onEdit, onDelete, isLoading }: StoryCardProps
     </div>
   );
 };
-

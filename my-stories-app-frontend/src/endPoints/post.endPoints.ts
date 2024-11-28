@@ -1,6 +1,6 @@
-import { FetchPendingPostsApiProps, LoginApiProps, LoginResponse, SignupApiProp, Submission } from "@/types";
+import { FetchPendingPostsApiProps, LoginApiProps, LoginResponse, SignupApiProp, Story, Submission } from "@/types";
 import axios from "axios";
-import { FetchPendingPostsApiUrl, LoginApiUrl, SignupApiUrl } from "./Urls";
+import { CreatePostUrl, FetchPendingPostsApiUrl, LoginApiUrl, SignupApiUrl } from "./Urls";
 
 export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps) => {
 
@@ -31,3 +31,13 @@ export const SignupApi = async ({ name, email, password }: SignupApiProp) => {
     });
     return response;
 }
+
+export const CreatePost = async ({ token, postData }: { token: string | null; postData: Story }) => {
+    const response = await axios.post(`${process.env.REACT_APP_BACK_END_URL}/${CreatePostUrl}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            postData
+        }
+    });
+    return response;
+};

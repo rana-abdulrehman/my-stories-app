@@ -99,7 +99,10 @@ const AdminBoard: React.FC = () => {
       {submissions.map((submission) => (
         <div key={submission._id} className="border p-4 mb-4">
           <h2 className="text-2xl font-semibold">{submission.title}</h2>
-          <p className="text-gray-700">{submission.content}</p>
+          <div
+            className="text-gray-700"
+            dangerouslySetInnerHTML={{ __html: submission.content }}
+          />
           <div className="flex flex-wrap items-center gap-3 mt-4">
             <img
               src={submission.author.image || 'https://cdn-icons-png.flaticon.com/128/1177/1177568.png'}

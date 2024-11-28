@@ -66,7 +66,10 @@ const LandingPage: React.FC = () => {
                     {story.title}
                   </h3>
                   <div className="mt-4">
-                    <p className="text-gray-600 text-lg">{story.content}</p>
+                    <div
+                      className="text-gray-700 mt-4"
+                      dangerouslySetInnerHTML={{ __html: story.content }}
+                    />
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 mt-6">
