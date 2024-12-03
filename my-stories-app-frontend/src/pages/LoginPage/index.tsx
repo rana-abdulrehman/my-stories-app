@@ -65,30 +65,34 @@ const LoginPage: React.FC = () => {
               <div>
                 <label className="text-gray-800 text-xs block mb-2">Email</label>
                 <div className="relative flex items-center">
-                  <input id="email"
+                  <input
+                    id="email"
                     type="email"
-                    className={`w-full bg-transparent text-sm border-b  focus:border-blue-500 px-2 py-3 outline-none
-                  ${errors.email ? "border-red-600" : "border-gray-300"}`}
+                    className={`w-full bg-transparent text-sm border-b focus:border-blue-500 px-2 py-3 outline-none
+                    ${errors.email ? "border-red-600" : "border-gray-300"}`}
                     placeholder="Enter email"
                     {...register("email", { required: true })}
                   />
-                  {errors.email ?
-                    <p> Email cannot be empty</p>
-                    : null}
+                  {errors.email && (
+                    <p className="text-red-600 text-xs mt-1">Email cannot be empty</p>
+                  )}
                 </div>
-              </div>
-              <div className="mt-8">
-                <label className="text-gray-800 text-xs block mb-2">Password</label>
-                <div className="relative flex items-center">
-                  <input id="password"
-                    type="password"
-                    className={`w-full bg-transparent text-sm border-b  focus:border-blue-500 px-2 py-3 outline-none
-                  ${errors.password ? "border-red-600" : "border-gray-300"}`}
-                    placeholder="Enter password"
-                    {...register("password", { required: true })} />
-                  {errors.password ?
-                    <p>Password cannot be empty</p>
-                    : null}
+
+                <div className="mt-8">
+                  <label className="text-gray-800 text-xs block mb-2">Password</label>
+                  <div className="relative flex items-center">
+                    <input
+                      id="password"
+                      type="password"
+                      className={`w-full bg-transparent text-sm border-b focus:border-blue-500 px-2 py-3 outline-none
+                       ${errors.password ? "border-red-600" : "border-gray-300"}`}
+                      placeholder="Enter password"
+                      {...register("password", { required: true })}
+                    />
+                    {errors.password && (
+                      <p className="text-red-600 text-xs mt-1">Password cannot be empty</p>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-4 mt-6">

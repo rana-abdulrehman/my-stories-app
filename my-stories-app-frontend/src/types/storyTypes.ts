@@ -12,8 +12,17 @@ export interface Story {
     createdAt: string;
     author: {
         name: string;
-        image: string;
+        image?: string;
     };
+    status: 'approved' | 'pending' | 'rejected';
+};
+
+export interface StoryCreate {
+    _id: string;
+    title: string;
+    content: string | null;
+    createdAt: string;
+    author : string;
     status: 'approved' | 'pending' | 'rejected';
 };
 

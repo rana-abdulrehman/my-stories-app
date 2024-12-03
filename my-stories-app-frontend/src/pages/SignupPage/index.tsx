@@ -17,7 +17,6 @@ const SignupPage: React.FC = () => {
   } = useForm<Signup>()
 
   const handleSignup = (data: Signup) => {
-
     SignupApi({
       name: data.name,
       email: data.email,
@@ -27,11 +26,12 @@ const SignupPage: React.FC = () => {
       if (response) {
         reset();
         navigate('/login');
-      };
+      }
     }).catch(error => {
-      console.error('Signup Error:', error.response || error);
-    })
-
+      console.error('Signup Error:', error.response?.data?.error || error);
+      const errorMessage = error.response?.data?.error || 'An unexpected error occurred';
+      toast.error(errorMessage); 
+    });
   };
 
   return (
@@ -57,7 +57,7 @@ const SignupPage: React.FC = () => {
                   {...register("name", { required: true })}
                 />
                 {errors.name ?
-                  <p className='text-red-600'>Name cannot be empty</p>
+                  <p className='text-red-600 text-xs mt-1'>Name cannot be empty</p>
                   : null}
               </div>
             </div>
@@ -67,12 +67,12 @@ const SignupPage: React.FC = () => {
                 <input id="email"
                   type="email"
                   className={`w-full bg-transparent text-sm border-b  focus:border-blue-500 px-2 py-3 outline-none
-                  ${errors.email ? "border-red-600" : "border-gray-300"}`} 
+                  ${errors.email ? "border-red-600" : "border-gray-300"}`}
                   placeholder="Enter email"
                   {...register("email", { required: true })}
                 />
                 {errors.email ?
-                  <p> Email cannot be empty</p>
+                  <p className='text-red-600 text-xs mt-1'> Email cannot be empty</p>
                   : null}
               </div>
             </div>
@@ -82,11 +82,11 @@ const SignupPage: React.FC = () => {
                 <input id="password"
                   type="password"
                   className={`w-full bg-transparent text-sm border-b  focus:border-blue-500 px-2 py-3 outline-none
-                  ${errors.name ? "border-red-600" : "border-gray-300"}`} 
+                  ${errors.name ? "border-red-600" : "border-gray-300"}`}
                   placeholder="Enter password"
                   {...register("password", { required: true })} />
                 {errors.password ?
-                  <p>Password cannot be empty</p>
+                  <p className='text-red-600 text-xs mt-1'>Password cannot be empty</p>
                   : null}
               </div>
             </div>

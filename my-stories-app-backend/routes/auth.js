@@ -9,10 +9,18 @@ const router = express.Router();
 router.post('/signup', validate(signupSchema), async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+
     const user = new User({ name, email, password });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
+    console.error('Signup Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

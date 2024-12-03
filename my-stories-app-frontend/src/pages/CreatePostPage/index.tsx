@@ -1,6 +1,7 @@
 import { Story, StoryFormData } from '@/types';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { createPost, updatePost } from '../../api';
 import Notifications from '../../components/Notifications';
@@ -19,9 +20,14 @@ const CreatePostPage = () => {
     edit: false,
     delete: false,
   });
-
+  
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
+  if (!token) {
+    navigate('/login');
+  }
+  
   const {
     control,
     handleSubmit,
@@ -62,7 +68,7 @@ const CreatePostPage = () => {
     try {
       const postData = {
         title: data.title,
-        content: data.content, //
+        content: data.content,
         author: user?.id || '',
       };
 
@@ -71,23 +77,25 @@ const CreatePostPage = () => {
         : await createPost(postData);
 
       const newStory: Story = {
-        _id: response._id,
+        _id: response._id || editingId,
         title: data.title,
-        content: data.content, //
+        content: data.content,
         author: {
           name: user?.name || '',
           image: user?.image || '',
         },
-        createdAt: new Date().toISOString(),
-        status: 'pending',
+        createdAt: response.createdAt || new Date().toISOString(),
+        status: response.status || 'pending',
       };
 
       if (editingId) {
-        setStories(stories.map((story) => (story._id === editingId ? newStory : story)));
+        setStories(currentStories =>
+          currentStories.map((story) => (story._id === editingId ? newStory : story))
+        );
         toast.success('Post updated successfully!');
         setEditingId(null);
       } else {
-        setStories([newStory, ...stories]);
+        setStories(currentStories => [newStory, ...currentStories]);
         toast.success('Post created successfully!');
       }
 
@@ -99,38 +107,40 @@ const CreatePostPage = () => {
 
   const handleEditPost = (postId: string) => {
     setIsLoading((prev) => ({ ...prev, edit: true }));
-      FetchPostByIdApi({ token, postId })
-      .then((response)=>{
+    FetchPostByIdApi({ token, postId })
+      .then((response) => {
         const post = response.data;
         setValue('title', post.title);
         setValue('content', post.content);
         setEditingId(postId);
         toast.success('Post loaded for editing');
-      }).catch(error =>{    
+      }).catch(error => {
         toast.error('Unable to load post for editing');
-      }).finally(()=> {
-      setIsLoading((prev) => ({ ...prev, edit: false }));
-    })
+      }).finally(() => {
+        setIsLoading((prev) => ({ ...prev, edit: false }));
+      })
   };
 
   const handleDeletePost = (postId: string) => {
     setIsLoading((prev) => ({ ...prev, delete: true }));
     DeletePostApi({ token, postId })
-    .then((response : any)=>{
-      setStories(response.data.posts);
-      toast.success('Post deleted successfully!');
-    }).catch((error)=>{
-      toast.error('Unable to delete post');
-    }).finally(()=>{
-      setIsLoading((prev) => ({ ...prev, delete: false }));
-    })
+      .then((response: any) => {
+        setStories(response.data.posts);
+        toast.success('Post deleted successfully!');
+      }).catch((error) => {
+        toast.error('Unable to delete post');
+      }).finally(() => {
+        setIsLoading((prev) => ({ ...prev, delete: false }));
+      })
 
   };
+
   const unreadNotificationsCount = notifications.filter((notification: any) => !notification.read).length;
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     if (editorRef.current) {
       setValue('content', editorRef.current.innerHTML);
+      
     }
   };
 
@@ -187,10 +197,14 @@ const CreatePostPage = () => {
               ref={editorRef}
               contentEditable
               onInput={handleInput}
+              
               className={`w-full p-2 border rounded min-h-[100px] outline-none ${errors.content ? 'border-red-500' : 'border-gray-300'
                 }`}
               dangerouslySetInnerHTML={{ __html: control._formValues.content }}
             />
+             {errors.content && (
+            <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+          )}
             <div className='space-y-2 space-x-2'>
               <button
                 type="button"

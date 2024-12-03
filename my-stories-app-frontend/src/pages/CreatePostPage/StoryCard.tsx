@@ -16,7 +16,7 @@ export const StoryCard = ({ story, onEdit, onDelete, isLoading }: StoryCardProps
     <div className="border p-4 mb-4">
       <h3 className="text-xl font-semibold">{story.title}</h3>
       <div
-        className="text-gray-700"
+        className="text-gray-700  "
         dangerouslySetInnerHTML={{ __html: story.content }}
       />
       <div className="flex items-center gap-3 mt-4">

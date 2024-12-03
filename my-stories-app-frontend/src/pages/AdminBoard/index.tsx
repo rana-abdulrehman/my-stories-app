@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import Notifications from '../../components/Notifications';
 import { FetchPendingPostsApi } from '../../endPoints/post.endPoints';
 import { ApprovePendingPostsApi, DisapprovePendingPostsApi } from '../../endPoints/put.endPoints';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const AdminBoard: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -11,6 +12,11 @@ const AdminBoard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
+
+  if (!token) {
+    navigate('/login');
+  }
 
   const fetchSubmissions = () => {
     setLoading(true);
@@ -26,7 +32,6 @@ const AdminBoard: React.FC = () => {
       .finally(() => {
         setLoading(false);
       })
-
   };
 
   useEffect(() => {
@@ -39,12 +44,12 @@ const AdminBoard: React.FC = () => {
       id: id
     })
       .then(response => {
+        
         setSubmissions(response.data.posts);
         toast.success('Post has Approved!')
       })
       .catch(error => {
         console.error(error.response?.data || 'An error occurred while approving the post.');
-
       })
   };
 
@@ -57,11 +62,9 @@ const AdminBoard: React.FC = () => {
     ).then(response => {
       setSubmissions(response.data.posts);
       toast.error('Post has Disapproved!')
-
     }).catch(error => {
       console.error(error.response?.data || 'An error occurred while disapproving the post.');
     })
-
   };
 
   if (loading) {

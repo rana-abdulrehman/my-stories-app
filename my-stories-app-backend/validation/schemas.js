@@ -13,7 +13,7 @@ const loginSchema = Joi.object({
 
 const postSchema = Joi.object({
   title: Joi.string().required(),
-  content: Joi.string().required(),
+  content: Joi.string(),
   author: Joi.string().required(), 
   // createdAt: Joi.string().required(), 
   // status: joi.string().required(),

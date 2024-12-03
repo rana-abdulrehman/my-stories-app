@@ -1,4 +1,4 @@
-import { ApprovePendingPostsApiProps, Notification, Story } from "@/types";
+import { ApprovePendingPostsApiProps, UpdatePostType } from "@/types";
 import axios from "axios";
 import { ApprovePendingPostsApiUrl, DisapprovePendingPostsApiUrl, MarkNotificationAsReadUrl, UpdatePostUrl } from "./Urls";
 
@@ -35,13 +35,22 @@ export const HandleNotificationClickApi = async ({ token, notificationId }: { to
     return response;
 }
 
-export const UpdatePost = async ({ token , postId , postData }: { token: string | null; postId : string ; postData: Story } ) => {
-    const response = await axios.put(`${process.env.REACT_APP_BACK_END_URL}/${UpdatePostUrl}/${postId}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            postData
-        }
-    });
-    return response;
-  };
-  
+export const UpdatePost = async ({ token, postId, postData } : UpdatePostType) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_BACK_END_URL}/${UpdatePostUrl}/${postId}`,
+            postData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json' 
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        
+        console.error('Error updating post:', error);
+        throw error; 
+    }
+};

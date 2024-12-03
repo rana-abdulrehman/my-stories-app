@@ -12,27 +12,41 @@ const router = express.Router();
 
 const sanitizeContent = (content) => {
   return sanitizeHtml(content, {
-    allowedTags: [], 
-    allowedAttributes: {}, 
+    allowedTags: [],
+    allowedAttributes: {},
   });
 };
 
 router.post('/create', authenticate, validate(postSchema), async (req, res) => {
   try {
     const { title, content } = req.body;
+
+    // Validate input
+    if (!title) {
+      return res.status(400).json({ error: 'Title are required' });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: 'Content are required' });
+    }
+
     const sanitizedContent = sanitizeContent(content);
     const post = new Post({ title, content: sanitizedContent, author: req.user._id, status: 'pending' });
     await post.save();
 
-    // notification admin
+    // Notification admin
     const adminUser = await User.findOne({ role: 'admin' });
-    const notification = new Notification({
-      userId: adminUser._id,
-      type: 'postSubmitted',
-      postId: post._id,
-      message: `New post submitted by ${req.user.name}`,
-    });
-    await notification.save();
+    if (adminUser) {
+      const notification = new Notification({
+        userId: adminUser._id,
+        type: 'postSubmitted',
+        postId: post._id,
+        message: `New post submitted by ${req.user.name}`,
+      });
+      await notification.save();
+    } else {
+      console.warn('No admin user found to notify');
+    }
 
     res.status(201).json({ message: 'Post created successfully', post });
   } catch (error) {
@@ -125,7 +139,7 @@ router.delete('/delete/:id', authenticate, async (req, res) => {
   try {
     const post = await Post.findOneAndDelete({ _id: req.params.id, author: req.user._id });
     const posts = await Post.find({ author: req.user._id }).populate('author', 'name').sort('-createdAt');
-    res.json({ message: 'Post deleted successfully' , posts });
+    res.json({ message: 'Post deleted successfully', posts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -134,6 +148,10 @@ router.delete('/delete/:id', authenticate, async (req, res) => {
 router.put('/edit/:id', authenticate, async (req, res) => {
   try {
     const { title, content } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
     const sanitizedContent = sanitizeContent(content);
     const post = await Post.findOneAndUpdate(
       { _id: req.params.id, author: req.user._id },
@@ -142,7 +160,7 @@ router.put('/edit/:id', authenticate, async (req, res) => {
     );
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: 'Post not found or you do not have permission to edit this post' });
     }
 
     res.json({ message: 'Post updated successfully', post });

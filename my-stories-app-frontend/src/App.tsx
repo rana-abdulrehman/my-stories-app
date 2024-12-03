@@ -12,7 +12,6 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
-
 const App: React.FC = () => {
   return (
     <Router>
@@ -75,4 +74,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
