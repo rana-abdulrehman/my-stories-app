@@ -7,8 +7,14 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
 });
 
+
+userSchema.pre('save', async function (next) {
+  next();
+});
+
+
 userSchema.methods.comparePassword = function (password) {
-  return this.password === password;
+  return this.password === password; 
 };
 
 const User = mongoose.model('User', userSchema);

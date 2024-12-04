@@ -1,14 +1,16 @@
 import { Story, StoryFormData } from '@/types';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { io } from 'socket.io-client';
 import { createPost, updatePost } from '../../api';
 import Notifications from '../../components/Notifications';
 import { UserContext } from '../../context/UserContext';
 import { DeletePostApi } from '../../endPoints/delete.endpoints';
 import { FetchNotificationsApi, FetchPostByIdApi, FetchUserPostsApi } from '../../endPoints/get.endpoints';
 import { StoryCard } from '../CreatePostPage/StoryCard';
+import { BackEndUrl } from '../../endPoints/Urls';
 
 const CreatePostPage = () => {
   const { user } = useContext(UserContext);
@@ -20,49 +22,68 @@ const CreatePostPage = () => {
     edit: false,
     delete: false,
   });
-  
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
   if (!token) {
     navigate('/login');
   }
-  
+
   const {
     control,
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<StoryFormData>({
     defaultValues: {
       title: '',
       content: '',
     },
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    criteriaMode: 'all',
   });
 
-  const editorRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    if (token) {
+    const socket = io(BackEndUrl, { transports: ['websocket'] });
+  
+    socket.on('updateNotificationCount', (data) => {
+      setUnreadCount(data.count);
       FetchNotificationsApi({ token })
         .then((response: any) => {
           setNotifications(response.data);
-          console.log(response.data)
         })
         .catch((error) => {
           console.error('Error:', error);
         });
-
-      FetchUserPostsApi({ token })
-        .then((response) => {
-          setStories(response.data);
-        })
-        .catch((error) => {
-          console.error('Error fetching user posts:', error);
-        });
-    }
+    });
+  
+    FetchNotificationsApi({ token })
+      .then((response: any) => {
+        setNotifications(response.data);
+        setUnreadCount(response.data.filter((n: any) => !n.read).length);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  
+    FetchUserPostsApi({ token })
+      .then((response) => {
+        setStories(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching user posts:', error);
+      });
+  
+    return () => {
+      socket.disconnect();
+    };
   }, [token]);
+  
 
   const onSubmit = async (data: StoryFormData) => {
     try {
@@ -89,13 +110,13 @@ const CreatePostPage = () => {
       };
 
       if (editingId) {
-        setStories(currentStories =>
+        setStories((currentStories) =>
           currentStories.map((story) => (story._id === editingId ? newStory : story))
         );
         toast.success('Post updated successfully!');
         setEditingId(null);
       } else {
-        setStories(currentStories => [newStory, ...currentStories]);
+        setStories((currentStories) => [newStory, ...currentStories]);
         toast.success('Post created successfully!');
       }
 
@@ -114,11 +135,13 @@ const CreatePostPage = () => {
         setValue('content', post.content);
         setEditingId(postId);
         toast.success('Post loaded for editing');
-      }).catch(error => {
-        toast.error('Unable to load post for editing');
-      }).finally(() => {
-        setIsLoading((prev) => ({ ...prev, edit: false }));
       })
+      .catch((error) => {
+        toast.error('Unable to load post for editing');
+      })
+      .finally(() => {
+        setIsLoading((prev) => ({ ...prev, edit: false }));
+      });
   };
 
   const handleDeletePost = (postId: string) => {
@@ -127,21 +150,13 @@ const CreatePostPage = () => {
       .then((response: any) => {
         setStories(response.data.posts);
         toast.success('Post deleted successfully!');
-      }).catch((error) => {
-        toast.error('Unable to delete post');
-      }).finally(() => {
-        setIsLoading((prev) => ({ ...prev, delete: false }));
       })
-
-  };
-
-  const unreadNotificationsCount = notifications.filter((notification: any) => !notification.read).length;
-
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    if (editorRef.current) {
-      setValue('content', editorRef.current.innerHTML);
-      
-    }
+      .catch((error) => {
+        toast.error('Unable to delete post');
+      })
+      .finally(() => {
+        setIsLoading((prev) => ({ ...prev, delete: false }));
+      });
   };
 
   return (
@@ -159,7 +174,7 @@ const CreatePostPage = () => {
         >
           Notification
           <span className="inline-flex items-center justify-center w-4 h-4 ml-2 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
-            {unreadNotificationsCount}
+            {unreadCount}
           </span>
         </button>
       </div>
@@ -191,49 +206,49 @@ const CreatePostPage = () => {
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="space-x-2">
-            <div
-              ref={editorRef}
-              contentEditable
-              onInput={handleInput}
-              
-              className={`w-full p-2 border rounded min-h-[100px] outline-none ${errors.content ? 'border-red-500' : 'border-gray-300'
-                }`}
-              dangerouslySetInnerHTML={{ __html: control._formValues.content }}
-            />
-             {errors.content && (
+        <div>
+          <Controller
+            name="content"
+            control={control}
+            rules={{ required: 'Content is required' }}
+            render={({ field }) => (
+              <textarea
+                {...field}
+                name="content"
+                placeholder="Content"
+                className={`w-full p-2 border rounded min-h-[100px] resize-none ${errors.content ? 'border-red-500' : 'border-gray-300'
+                  }`}
+              />
+            )}
+          />
+          {errors.content && (
             <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
           )}
-            <div className='space-y-2 space-x-2'>
-              <button
-                type="button"
-                onClick={() => document.execCommand('bold', false)}
-                className="bg-gray-200 px-4 py-2 rounded"
-              >
-                Bold
-              </button>
-              <button
-                type="button"
-                onClick={() => document.execCommand('italic', false)}
-                className="bg-gray-200 px-4 py-2 rounded"
-              >
-                Italic
-              </button>
-              <button
-                type="button"
-                onClick={() => document.execCommand('underline', false)}
-                className="bg-gray-200 px-4 py-2 rounded"
-              >
-                Underline
-              </button>
-            </div>
-          </div>
-
         </div>
-        {errors.content && (
-          <p className="text-red-500 text-sm">{errors.content.message}</p>
-        )}
+
+        <div className="space-x-2">
+          <button
+            type="button"
+            // onClick={() => applyFormatting('b')}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Bold
+          </button>
+          <button
+            type="button"
+            // onClick={() => applyFormatting('i')}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Italic
+          </button>
+          <button
+            type="button"
+            // onClick={() => applyFormatting('u')}
+            className="bg-gray-200 px-4 py-2 rounded"
+          >
+            Underline
+          </button>
+        </div>
 
         <button
           type="submit"

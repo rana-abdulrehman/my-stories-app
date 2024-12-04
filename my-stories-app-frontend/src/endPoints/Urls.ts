@@ -10,3 +10,6 @@ export const MarkNotificationAsReadUrl ="read"
 export const FetchStoriesApiUrl = "posts/approved"
 export const CreatePostUrl ="posts/create"
 export const UpdatePostUrl = "posts/edit"
+export const ForgotPasswordApiUrl = 'auth/forgot-password';
+export const ResetPasswordApiUrl = 'auth/reset-password';
+export const BackEndUrl = 'http://localhost:5000';

@@ -1,16 +1,21 @@
-import { Submission } from '@/types';
 import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import Notifications from '../../components/Notifications';
 import { FetchPendingPostsApi } from '../../endPoints/post.endPoints';
 import { ApprovePendingPostsApi, DisapprovePendingPostsApi } from '../../endPoints/put.endPoints';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { Submission } from '@/types';
+import { FetchNotificationsApi } from '../../endPoints/get.endpoints';
+import { BackEndUrl } from '../../endPoints/Urls';
 
 const AdminBoard: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
@@ -18,53 +23,72 @@ const AdminBoard: React.FC = () => {
     navigate('/login');
   }
 
-  const fetchSubmissions = () => {
-    setLoading(true);
-    setError(null);
-    FetchPendingPostsApi({ token: token })
+  useEffect(() => {
+    const socket = io(BackEndUrl, { transports: ['websocket'] });
+  
+    socket.on('updateNotificationCount', (data) => {
+      setUnreadCount(data.count);
+      FetchNotificationsApi({ token })
+        .then((response: any) => {
+          setNotifications(response.data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    });
+
+    FetchNotificationsApi({ token })
+      .then((response: any) => {
+        setNotifications(response.data);
+        setUnreadCount(response.data.filter((n: any) => !n.read).length);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  
+    FetchPendingPostsApi({ token })
       .then(response => {
         setSubmissions(response.data);
       })
       .catch(error => {
         console.error(error.response?.data || 'An error occurred while fetching submissions.');
-        setError(error.response?.data || 'Unable to fetch submissions.');
       })
       .finally(() => {
         setLoading(false);
-      })
-  };
-
-  useEffect(() => {
-    fetchSubmissions();
-  }, []);
+      });
+  
+    return () => {
+      socket.disconnect();
+    };
+  }, [token]);
+  
 
   const handleApprove = (id: string) => {
     ApprovePendingPostsApi({
-      token: token,
-      id: id
+      token,
+      id,
     })
       .then(response => {
-        
         setSubmissions(response.data.posts);
-        toast.success('Post has Approved!')
+        toast.success('Post has Approved!');
       })
       .catch(error => {
         console.error(error.response?.data || 'An error occurred while approving the post.');
-      })
+      });
   };
 
   const handleDisapprove = (id: string) => {
-    DisapprovePendingPostsApi(
-      {
-        token: token,
-        id: id
-      }
-    ).then(response => {
-      setSubmissions(response.data.posts);
-      toast.error('Post has Disapproved!')
-    }).catch(error => {
-      console.error(error.response?.data || 'An error occurred while disapproving the post.');
+    DisapprovePendingPostsApi({
+      token,
+      id,
     })
+      .then(response => {
+        setSubmissions(response.data.posts);
+        toast.error('Post has Disapproved!');
+      })
+      .catch(error => {
+        console.error(error.response?.data || 'An error occurred while disapproving the post.');
+      });
   };
 
   if (loading) {
@@ -94,7 +118,7 @@ const AdminBoard: React.FC = () => {
         >
           Notification
           <span className="inline-flex items-center justify-center w-4 h-4 ml-2 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">
-            {submissions.length}
+            {unreadCount}
           </span>
         </button>
       </div>

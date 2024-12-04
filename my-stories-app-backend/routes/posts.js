@@ -21,15 +21,6 @@ router.post('/create', authenticate, validate(postSchema), async (req, res) => {
   try {
     const { title, content } = req.body;
 
-    // Validate input
-    if (!title) {
-      return res.status(400).json({ error: 'Title are required' });
-    }
-
-    if (!content) {
-      return res.status(400).json({ error: 'Content are required' });
-    }
-
     const sanitizedContent = sanitizeContent(content);
     const post = new Post({ title, content: sanitizedContent, author: req.user._id, status: 'pending' });
     await post.save();
