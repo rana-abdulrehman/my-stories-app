@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const validate = require('../middleware/validate');
 const { signupSchema, loginSchema } = require('../validation/schemas');
+const { addToBlacklist } = require('../helperFunctions/tokenBlacklist');
+const authenticate = require('../middleware/authenticate');
 
 const router = express.Router();
 
@@ -69,5 +71,12 @@ router.post('/reset-password', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.post('/logout', authenticate, (req, res) => {
+  const token = req.token;
+  addToBlacklist(token);
+  res.json({ message: 'Logged out successfully' });
+});
+
 
 module.exports = router;

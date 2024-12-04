@@ -1,6 +1,6 @@
 import { CreatePostType, FetchPendingPostsApiProps, LoginApiProps, LoginResponse, SignupApiProp, Story, Submission } from "@/types";
 import axios from "axios";
-import { CreatePostUrl, FetchPendingPostsApiUrl, ForgotPasswordApiUrl, LoginApiUrl, ResetPasswordApiUrl, SignupApiUrl } from "./Urls";
+import { CreatePostUrl, FetchPendingPostsApiUrl, ForgotPasswordApiUrl, LoginApiUrl, LogoutApiUrl, ResetPasswordApiUrl, SignupApiUrl } from "./Urls";
 
 export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps) => {
 
@@ -51,13 +51,25 @@ export const ResetPasswordApi = async ({ token, newPassword }: any) => {
 export const CreatePost = async ({ token, postData }: CreatePostType) => {
     const response = await axios.post(
         `${process.env.REACT_APP_BACK_END_URL}/${CreatePostUrl}`,
-        postData, 
+        postData,
         {
             headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json' 
+                'Content-Type': 'application/json'
             }
         }
     );
     return response.data;
+};
+export const LogoutApi = async ({ token }: any) => {
+    const response:any = await axios.post(
+        `${process.env.REACT_APP_BACK_END_URL}/${LogoutApiUrl}`,
+        {},
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+    return response;
 };

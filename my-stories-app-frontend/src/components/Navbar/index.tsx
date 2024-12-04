@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
+import { LogoutApi } from '../../endPoints/post.endPoints';
+import { toast } from 'react-toastify';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useContext(UserContext);
@@ -8,8 +10,17 @@ const Navbar: React.FC = () => {
   const token = localStorage.getItem('token');
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    LogoutApi({ token: token })
+      .then(response => {
+        console.log(response.data.message)
+        toast.error(response.data.message)
+        logout();
+        navigate('/login');
+      })
+      .catch(error => {
+        console.log(error);
+      })
+
   };
 
   return (

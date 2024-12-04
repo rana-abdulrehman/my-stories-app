@@ -45,6 +45,9 @@ const AdminBoard: React.FC = () => {
 
 
   const handleApprove = (id: string) => {
+    if (!token) {
+      navigate('/login');
+    }
     ApprovePendingPostsApi({
       token,
       id,
@@ -59,6 +62,9 @@ const AdminBoard: React.FC = () => {
   };
 
   const handleDisapprove = (id: string) => {
+    if (!token) {
+      navigate('/login');
+    }
     DisapprovePendingPostsApi({
       token,
       id,

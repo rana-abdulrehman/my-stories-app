@@ -13,3 +13,4 @@ export const UpdatePostUrl = "posts/edit"
 export const ForgotPasswordApiUrl = 'auth/forgot-password';
 export const ResetPasswordApiUrl = 'auth/reset-password';
 export const BackEndUrl = 'http://localhost:5000';
+export const LogoutApiUrl = "auth/logout"
