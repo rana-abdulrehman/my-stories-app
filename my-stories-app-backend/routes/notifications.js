@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const Notification = require('../models/Notification');
-const io = require('../server').io;
+
 
 const router = express.Router();
 
@@ -28,10 +28,6 @@ router.put('/:id/read', authenticate, async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { read: true });
     const notifications = await Notification.find({ userId: req.userId }).sort('-createdAt');
-    const unreadCount = notifications.filter((n) => !n.read).length;
-
-    // Emit real-time update
-    io.emit('updateNotificationCount', { count: unreadCount });
 
     res.json(notifications);
   } catch (error) {

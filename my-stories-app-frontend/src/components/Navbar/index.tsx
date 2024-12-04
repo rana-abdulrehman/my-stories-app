@@ -29,7 +29,6 @@ const Navbar: React.FC = () => {
               {user && user.role === 'admin' && (
                 <>
                   <Link to="/admin-board" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Admin Board</Link>
-                  {/* <Link to="/create-post" className="text-gray-900 hover:underline hover:text-[#007bff] font-semibold">Create Post</Link> */}
                 </>
               )}
               {user && user.role !== 'admin' && (

@@ -1,22 +1,19 @@
 import { Notification } from "@/types";
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { UserContext } from "../../context/UserContext";
 import { FetchNotificationsApi } from '../../endPoints/get.endpoints';
 import { HandleNotificationClickApi } from "../../endPoints/put.endPoints";
-import { io } from 'socket.io-client';
-import { BackEndUrl } from "../../endPoints/Urls";
 
 const Notifications: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const {unreadCount, setUnreadCount} =useContext(UserContext); 
   const token = localStorage.getItem('token');
 
+  useEffect(()=>{
+    console.log(unreadCount)
+  },[unreadCount])
+
   useEffect(() => {
-    const socket = io(BackEndUrl);
-
-    socket.on('updateNotificationCount', (data) => {
-      setUnreadCount(data.count);
-    });
-
     FetchNotificationsApi({ token })
       .then((response) => {
         setNotifications(response.data);
@@ -26,9 +23,6 @@ const Notifications: React.FC = () => {
         console.error('Error:', error);
       });
 
-    return () => {
-      socket.disconnect();
-    };
   }, [token]);
 
   const handleNotificationClick = (notification: Notification) => {

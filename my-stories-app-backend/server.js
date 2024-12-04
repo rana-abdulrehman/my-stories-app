@@ -4,12 +4,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
-const socketIo = require('socket.io');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const notificationRoutes = require('./routes/notifications');
 const User = require('./models/User');
-const Notification = require('./models/Notification');
 
 dotenv.config();
 
@@ -44,33 +42,6 @@ db.once('open', async () => {
 });
 
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: '*', 
-    methods: ['GET', 'POST'],
-  },
-});
-
-io.on('connection', (socket) => {
-  console.log('New client connected');
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-
-  socket.on('markNotificationAsRead', async (data) => {
-    try {
-      await Notification.findByIdAndUpdate(data.notificationId, { read: true });
-      const notifications = await Notification.find({ userId: data.userId }).sort('-createdAt');
-      const unreadCount = notifications.filter((n) => !n.read).length;
-
-      
-      io.emit('updateNotificationCount', { count: unreadCount });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  });
-});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);

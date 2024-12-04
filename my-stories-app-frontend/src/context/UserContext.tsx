@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, Dispatch } from 'react';
 
 interface User {
   id: string;
@@ -14,6 +14,8 @@ interface UserContextType {
   isLoggedIn: boolean;
   login: (user: User) => void;
   logout: () => void;
+  unreadCount: number;
+  setUnreadCount: Dispatch<number>;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -25,6 +27,8 @@ export const UserContext = createContext<UserContextType>({
   logout: () => {
     throw new Error("logout() is not implemented.");
   },
+  unreadCount: 0,
+  setUnreadCount:()=>{ return 0}
 });
 
 interface UserProviderProps {
@@ -34,6 +38,7 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -60,7 +65,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, isLoggedIn, login, logout }}>
+    <UserContext.Provider value={{ user, isLoggedIn, login, logout,unreadCount,setUnreadCount }}>
       {children}
     </UserContext.Provider>
   );

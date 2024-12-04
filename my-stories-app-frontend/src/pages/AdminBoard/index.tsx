@@ -1,21 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import { Submission } from '@/types';
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Notifications from '../../components/Notifications';
+import { UserContext } from '../../context/UserContext';
+import { FetchNotificationsApi } from '../../endPoints/get.endpoints';
 import { FetchPendingPostsApi } from '../../endPoints/post.endPoints';
 import { ApprovePendingPostsApi, DisapprovePendingPostsApi } from '../../endPoints/put.endPoints';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { Submission } from '@/types';
-import { FetchNotificationsApi } from '../../endPoints/get.endpoints';
-import { BackEndUrl } from '../../endPoints/Urls';
 
 const AdminBoard: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const {unreadCount, setUnreadCount} =useContext(UserContext); 
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
@@ -23,20 +21,7 @@ const AdminBoard: React.FC = () => {
     navigate('/login');
   }
 
-  useEffect(() => {
-    const socket = io(BackEndUrl, { transports: ['websocket'] });
-  
-    socket.on('updateNotificationCount', (data) => {
-      setUnreadCount(data.count);
-      FetchNotificationsApi({ token })
-        .then((response: any) => {
-          setNotifications(response.data);
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
-    });
-
+  useEffect(() => {  
     FetchNotificationsApi({ token })
       .then((response: any) => {
         setNotifications(response.data);
@@ -45,7 +30,7 @@ const AdminBoard: React.FC = () => {
       .catch((error) => {
         console.error('Error:', error);
       });
-  
+
     FetchPendingPostsApi({ token })
       .then(response => {
         setSubmissions(response.data);
@@ -56,12 +41,8 @@ const AdminBoard: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  
-    return () => {
-      socket.disconnect();
-    };
   }, [token]);
-  
+
 
   const handleApprove = (id: string) => {
     ApprovePendingPostsApi({
@@ -95,14 +76,6 @@ const AdminBoard: React.FC = () => {
     return (
       <div className="container mx-auto p-4">
         <p>Loading submissions...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <p>Error: {error}</p>
       </div>
     );
   }

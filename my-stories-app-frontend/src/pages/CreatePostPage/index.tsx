@@ -3,17 +3,15 @@ import { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { io } from 'socket.io-client';
 import { createPost, updatePost } from '../../api';
 import Notifications from '../../components/Notifications';
 import { UserContext } from '../../context/UserContext';
 import { DeletePostApi } from '../../endPoints/delete.endpoints';
 import { FetchNotificationsApi, FetchPostByIdApi, FetchUserPostsApi } from '../../endPoints/get.endpoints';
 import { StoryCard } from '../CreatePostPage/StoryCard';
-import { BackEndUrl } from '../../endPoints/Urls';
 
 const CreatePostPage = () => {
-  const { user } = useContext(UserContext);
+  const { user,unreadCount, setUnreadCount } = useContext(UserContext);
   const [stories, setStories] = useState<Story[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -22,7 +20,6 @@ const CreatePostPage = () => {
     edit: false,
     delete: false,
   });
-  const [unreadCount, setUnreadCount] = useState(0);
 
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
@@ -49,18 +46,6 @@ const CreatePostPage = () => {
   });
 
   useEffect(() => {
-    const socket = io(BackEndUrl, { transports: ['websocket'] });
-  
-    socket.on('updateNotificationCount', (data) => {
-      setUnreadCount(data.count);
-      FetchNotificationsApi({ token })
-        .then((response: any) => {
-          setNotifications(response.data);
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-        });
-    });
   
     FetchNotificationsApi({ token })
       .then((response: any) => {
@@ -70,7 +55,7 @@ const CreatePostPage = () => {
       .catch((error) => {
         console.error('Error:', error);
       });
-  
+
     FetchUserPostsApi({ token })
       .then((response) => {
         setStories(response.data);
@@ -78,12 +63,9 @@ const CreatePostPage = () => {
       .catch((error) => {
         console.error('Error fetching user posts:', error);
       });
-  
-    return () => {
-      socket.disconnect();
-    };
+
   }, [token]);
-  
+
 
   const onSubmit = async (data: StoryFormData) => {
     try {
@@ -98,15 +80,15 @@ const CreatePostPage = () => {
         : await createPost(postData);
 
       const newStory: Story = {
-        _id: response._id || editingId,
+        _id: response.post._id || editingId,
         title: data.title,
         content: data.content,
         author: {
           name: user?.name || '',
           image: user?.image || '',
         },
-        createdAt: response.createdAt || new Date().toISOString(),
-        status: response.status || 'pending',
+        createdAt: response.post.createdAt || new Date().toISOString(),
+        status: response.post.status || 'pending',
       };
 
       if (editingId) {
