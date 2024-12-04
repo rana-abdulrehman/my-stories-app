@@ -1,21 +1,16 @@
+// index.tsx
 import React, { useState, useContext, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { LoginApi, ForgotPasswordApi, ResetPasswordApi } from '../../endPoints/post.endPoints';
+import { LoginApi, ForgotPasswordApi } from '../../endPoints/post.endPoints';
 import { UserContext } from '../../context/UserContext';
 import { LoginFromType } from '@/types';
 
-interface ResetPasswordForm {
-  token: string;
-  newPassword: string;
-}
-
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [formType, setFormType] = useState<'login' | 'forgotPassword' | 'resetPassword'>('login');
-  const [resetToken, setResetToken] = useState('');
+  const [formType, setFormType] = useState<'login' | 'forgotPassword'>('login');
   const { login } = useContext(UserContext);
 
   const {
@@ -24,13 +19,6 @@ const LoginPage: React.FC = () => {
     formState: { errors },
     reset,
   } = useForm<LoginFromType>();
-
-  const {
-    register: registerReset,
-    handleSubmit: handleSubmitReset,
-    formState: { errors: errorsReset },
-    reset: resetReset,
-  } = useForm<ResetPasswordForm>();
 
   const handleLogin = (data: LoginFromType) => {
     LoginApi({
@@ -57,27 +45,10 @@ const LoginPage: React.FC = () => {
     ForgotPasswordApi({ email: data.email })
       .then(response => {
         toast.success('Reset token generated. Check your email.');
-        setResetToken(response.data.resetToken);
-        setFormType('resetPassword');
-        resetReset();
+        reset();
       })
       .catch(error => {
         console.error('Forgot Password Error:', error.response?.data?.error || error);
-        const errorMessage = error.response?.data?.error || 'An unexpected error occurred';
-        toast.error(errorMessage);
-      });
-  };
-
-  const handleResetPassword = (data: ResetPasswordForm) => {
-    ResetPasswordApi({ token: resetToken, newPassword: data.newPassword })
-      .then(response => {
-        toast.success('Password reset successfully. Redirecting to login...');
-        setResetToken('');
-        resetReset();
-        setFormType('login');
-      })
-      .catch(error => {
-        console.error('Reset Password Error:', error.response?.data?.error || error);
         const errorMessage = error.response?.data?.error || 'An unexpected error occurred';
         toast.error(errorMessage);
       });
@@ -159,39 +130,11 @@ const LoginPage: React.FC = () => {
             </div>
           </form>
         );
-      case 'resetPassword':
-        return (
-          <form className="max-w-lg w-full mx-auto" onSubmit={handleSubmitReset(handleResetPassword)}>
-            <div className="mb-12">
-              <h3 className="text-blue-500 md:text-3xl text-2xl font-extrabold max-md:text-center">Reset Password</h3>
-            </div>
-            <div>
-              <label className="text-gray-800 text-xs block mb-2">New Password</label>
-              <div className="relative flex items-center">
-                <input id="newPassword"
-                  type="password"
-                  className={`w-full bg-transparent text-sm border-b focus:border-blue-500 px-2 py-3 outline-none
-                  ${errorsReset.newPassword ? "border-red-600" : "border-gray-300"}`}
-                  placeholder="Enter new password"
-                  {...registerReset("newPassword", { required: true })}
-                />
-                {errorsReset.newPassword && <p className='text-red-600 text-xs mt-1'>New password cannot be empty</p>}
-              </div>
-            </div>
-            <div className="mt-12">
-              <button type="submit" className="w-full py-3 px-6 text-sm tracking-wider font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white focus:outline-none">
-                Reset Password
-              </button>
-              <p className="text-sm mt-6 text-gray-800">Remember your password? <a href="#" onClick={() => setFormType('login')} className="text-blue-500 font-semibold hover:underline ml-1">Login here</a></p>
-            </div>
-          </form>
-        );
     }
   };
 
   useEffect(() => {
     reset();
-    resetReset();
   }, [formType]);
 
   return (
@@ -209,4 +152,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-

@@ -11,6 +11,7 @@ import CreatePostPage from "./pages/CreatePostPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import ResetPasswordPage from "./pages/LoginPage/ResetPasswordPage"; 
 
 const App: React.FC = () => {
   return (
@@ -62,6 +63,7 @@ const App: React.FC = () => {
                     </AuthGuard>
                   }
                 />
+                <Route path="/reset-password" element={<ResetPasswordPage />} /> 
               </Routes>
             </main>
           </div>

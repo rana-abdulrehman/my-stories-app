@@ -5,6 +5,7 @@ const validate = require('../middleware/validate');
 const { signupSchema, loginSchema } = require('../validation/schemas');
 const { addToBlacklist } = require('../helperFunctions/tokenBlacklist');
 const authenticate = require('../middleware/authenticate');
+const { sendResetEmail } = require('../helperFunctions/mailService');
 
 const router = express.Router();
 
@@ -47,7 +48,9 @@ router.post('/forgot-password', async (req, res) => {
 
     const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ message: 'Reset token generated', resetToken });
+    await sendResetEmail(email, resetToken);
+
+    res.json({ message: 'Reset token generated and sent to your email' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,6 +80,5 @@ router.post('/logout', authenticate, (req, res) => {
   addToBlacklist(token);
   res.json({ message: 'Logged out successfully' });
 });
-
 
 module.exports = router;
