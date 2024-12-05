@@ -225,27 +225,6 @@ const CreatePostPage = () => {
           )}
         </div>
 
-        <div className="space-x-2">
-          <button
-            type="button"
-            className="bg-gray-200 px-4 py-2 rounded"
-          >
-            Bold
-          </button>
-          <button
-            type="button"
-            className="bg-gray-200 px-4 py-2 rounded"
-          >
-            Italic
-          </button>
-          <button
-            type="button"
-            className="bg-gray-200 px-4 py-2 rounded"
-          >
-            Underline
-          </button>
-        </div>
-
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
