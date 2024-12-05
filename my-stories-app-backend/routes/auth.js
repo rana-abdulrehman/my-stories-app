@@ -1,10 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const validate = require('../middleware/validate');
-const { signupSchema, loginSchema } = require('../validation/schemas');
 const { addToBlacklist } = require('../helperFunctions/tokenBlacklist');
 const authenticate = require('../middleware/authenticate');
+const validate = require('../middleware/validate');
+const { signupSchema, loginSchema } = require('../validation/schemas');
 const { sendResetEmail } = require('../helperFunctions/mailService');
 
 const router = express.Router();
@@ -46,9 +46,18 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    await user.save();
 
-    await sendResetEmail(email, resetToken);
+    const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const expiryTime = Date.now() + 3600000; 
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = new Date(expiryTime);
+    await user.save();
+
+    sendResetEmail(email, resetToken).catch(console.error);
 
     res.json({ message: 'Reset token generated and sent to your email' });
   } catch (error) {
@@ -62,11 +71,23 @@ router.post('/reset-password', async (req, res) => {
     if (!token) {
       return res.status(400).json({ error: 'Token is required' });
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const user = await User.findOne({ resetToken: token });
+    if (!user || user.resetTokenExpiry < new Date()) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    if (user.password === newPassword) {
+      return res.status(400).json({ error: 'New password cannot be the same as the current password' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
 
     user.password = newPassword;
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
     await user.save();
 
     res.json({ message: 'Password reset successfully' });

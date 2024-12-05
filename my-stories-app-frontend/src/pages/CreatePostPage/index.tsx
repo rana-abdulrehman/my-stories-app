@@ -11,7 +11,7 @@ import { FetchNotificationsApi, FetchPostByIdApi, FetchUserPostsApi } from '../.
 import { StoryCard } from '../CreatePostPage/StoryCard';
 
 const CreatePostPage = () => {
-  const { user,unreadCount, setUnreadCount } = useContext(UserContext);
+  const { user, unreadCount, setUnreadCount } = useContext(UserContext);
   const [stories, setStories] = useState<Story[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -46,7 +46,6 @@ const CreatePostPage = () => {
   });
 
   useEffect(() => {
-  
     FetchNotificationsApi({ token })
       .then((response: any) => {
         setNotifications(response.data);
@@ -61,11 +60,14 @@ const CreatePostPage = () => {
         setStories(response.data);
       })
       .catch((error) => {
-        console.error('Error fetching user posts:', error);
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          console.error('Error fetching user posts:', error);
+        }
       });
-
   }, [token]);
-
 
   const onSubmit = async (data: StoryFormData) => {
     try {
@@ -104,7 +106,12 @@ const CreatePostPage = () => {
 
       reset();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'An error occurred while saving the story');
+      if (error.response?.status === 401) {
+        toast.error('Login Expired! Login Again');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.error || 'An error occurred while saving the story');
+      }
     }
   };
 
@@ -119,7 +126,12 @@ const CreatePostPage = () => {
         toast.success('Post loaded for editing');
       })
       .catch((error) => {
-        toast.error('Unable to load post for editing');
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          toast.error('Unable to load post for editing');
+        }
       })
       .finally(() => {
         setIsLoading((prev) => ({ ...prev, edit: false }));
@@ -134,7 +146,12 @@ const CreatePostPage = () => {
         toast.success('Post deleted successfully!');
       })
       .catch((error) => {
-        toast.error('Unable to delete post');
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          toast.error('Unable to delete post');
+        }
       })
       .finally(() => {
         setIsLoading((prev) => ({ ...prev, delete: false }));
@@ -211,21 +228,18 @@ const CreatePostPage = () => {
         <div className="space-x-2">
           <button
             type="button"
-            // onClick={() => applyFormatting('b')}
             className="bg-gray-200 px-4 py-2 rounded"
           >
             Bold
           </button>
           <button
             type="button"
-            // onClick={() => applyFormatting('i')}
             className="bg-gray-200 px-4 py-2 rounded"
           >
             Italic
           </button>
           <button
             type="button"
-            // onClick={() => applyFormatting('u')}
             className="bg-gray-200 px-4 py-2 rounded"
           >
             Underline

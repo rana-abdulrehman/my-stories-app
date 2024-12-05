@@ -1,4 +1,3 @@
-// ResetPasswordPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,6 +8,7 @@ import { ResetPasswordApi } from '../../endPoints/post.endPoints';
 interface ResetPasswordForm {
   token: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
 const ResetPasswordPage: React.FC = () => {
@@ -19,6 +19,7 @@ const ResetPasswordPage: React.FC = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
     reset,
   } = useForm<ResetPasswordForm>();
@@ -48,6 +49,8 @@ const ResetPasswordPage: React.FC = () => {
     }
   }, [location.search, navigate]);
 
+  const newPassword = watch("newPassword");
+
   return (
     <div className="font-[sans-serif] bg-white md:h-screen">
       <div className="grid md:grid-cols-2 items-center gap-8 h-full">
@@ -64,9 +67,26 @@ const ResetPasswordPage: React.FC = () => {
                   className={`w-full bg-transparent text-sm border-b focus:border-blue-500 px-2 py-3 outline-none
                   ${errors.newPassword ? "border-red-600" : "border-gray-300"}`}
                   placeholder="Enter new password"
-                  {...register("newPassword", { required: true })}
+                  {...register("newPassword", { required: true, minLength: 6 })}
                 />
-                {errors.newPassword && <p className='text-red-600 text-xs mt-1'>New password cannot be empty</p>}
+                {errors.newPassword && errors.newPassword.type === "required" && <p className='text-red-600 text-xs mt-1'>New password cannot be empty</p>}
+                {errors.newPassword && errors.newPassword.type === "minLength" && <p className='text-red-600 text-xs mt-1'>Password must be at least 6 characters long</p>}
+              </div>
+            </div>
+            <div className="mt-6">
+              <label className="text-gray-800 text-xs block mb-2">Confirm Password</label>
+              <div className="relative flex items-center">
+                <input id="confirmPassword"
+                  type="password"
+                  className={`w-full bg-transparent text-sm border-b focus:border-blue-500 px-2 py-3 outline-none
+                  ${errors.confirmPassword ? "border-red-600" : "border-gray-300"}`}
+                  placeholder="Confirm new password"
+                  {...register("confirmPassword", {
+                    required: true,
+                    validate: value => value === newPassword || "The passwords do not match"
+                  })}
+                />
+                {errors.confirmPassword && <p className='text-red-600 text-xs mt-1'>{errors.confirmPassword.message}</p>}
               </div>
             </div>
             <div className="mt-12">

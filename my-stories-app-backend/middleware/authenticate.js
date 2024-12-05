@@ -16,7 +16,7 @@ const authenticate = async (req, res, next) => {
     if (!user) return res.status(401).json({ error: 'Invalid token' });
 
     req.user = user;
-    req.token = token; // Store the token in the request object
+    req.token = token; 
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid token' });
@@ -24,4 +24,3 @@ const authenticate = async (req, res, next) => {
 };
 
 module.exports = authenticate;
-

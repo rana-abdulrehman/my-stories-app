@@ -13,22 +13,27 @@ const AdminBoard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const {unreadCount, setUnreadCount} =useContext(UserContext); 
+  const { unreadCount, setUnreadCount } = useContext(UserContext);
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
-  if (!token) {
-    navigate('/login');
-  }
+  const checkToken = () => {
+    if (!token) {
+      toast.error('Login Expired! Login Again');
+      navigate('/login');
+    }
+  };
 
-  useEffect(() => {  
+  useEffect(() => {
+    checkToken();
+
     FetchNotificationsApi({ token })
       .then((response: any) => {
         setNotifications(response.data);
         setUnreadCount(response.data.filter((n: any) => !n.read).length);
       })
       .catch((error) => {
-        console.error('Error:', error);
+        console.error('Error fetching notifications:', error);
       });
 
     FetchPendingPostsApi({ token })
@@ -36,45 +41,57 @@ const AdminBoard: React.FC = () => {
         setSubmissions(response.data);
       })
       .catch(error => {
-        console.error(error.response?.data || 'An error occurred while fetching submissions.');
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          console.error('Error fetching submissions:', error.response?.data || 'An error occurred while fetching submissions.');
+        }
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [token]);
-
+  }, [token, navigate]);
 
   const handleApprove = (id: string) => {
-    if (!token) {
-      navigate('/login');
-    }
+    checkToken();
+
     ApprovePendingPostsApi({
       token,
       id,
     })
       .then(response => {
         setSubmissions(response.data.posts);
-        toast.success('Post has Approved!');
+        toast.success('Post has been approved!');
       })
       .catch(error => {
-        console.error(error.response?.data || 'An error occurred while approving the post.');
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          console.error('Error approving post:', error.response?.data || 'An error occurred while approving the post.');
+        }
       });
   };
 
   const handleDisapprove = (id: string) => {
-    if (!token) {
-      navigate('/login');
-    }
+    checkToken();
+
     DisapprovePendingPostsApi({
       token,
       id,
     })
       .then(response => {
         setSubmissions(response.data.posts);
-        toast.error('Post has Disapproved!');
+        toast.error('Post has been disapproved!');
       })
       .catch(error => {
-        console.error(error.response?.data || 'An error occurred while disapproving the post.');
+        if (error.response?.status === 401) {
+          toast.error('Login Expired! Login Again');
+          navigate('/login');
+        } else {
+          console.error('Error disapproving post:', error.response?.data || 'An error occurred while disapproving the post.');
+        }
       });
   };
 

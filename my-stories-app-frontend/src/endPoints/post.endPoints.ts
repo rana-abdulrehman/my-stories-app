@@ -3,7 +3,6 @@ import axios from "axios";
 import { CreatePostUrl, FetchPendingPostsApiUrl, ForgotPasswordApiUrl, LoginApiUrl, LogoutApiUrl, ResetPasswordApiUrl, SignupApiUrl } from "./Urls";
 
 export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps) => {
-
     const response = await axios.get<Submission[]>(
         `${process.env.REACT_APP_BACK_END_URL}/${FetchPendingPostsApiUrl}`, {
         headers: {
@@ -14,7 +13,6 @@ export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps)
 }
 
 export const LoginApi = async ({ email, password }: LoginApiProps) => {
-
     const response = await axios.post<LoginResponse>(`${process.env.REACT_APP_BACK_END_URL}/${LoginApiUrl}`, {
         email,
         password,
@@ -23,7 +21,6 @@ export const LoginApi = async ({ email, password }: LoginApiProps) => {
 }
 
 export const SignupApi = async ({ name, email, password }: SignupApiProp) => {
-
     const response = await axios.post(`${process.env.REACT_APP_BACK_END_URL}/${SignupApiUrl}`, {
         name,
         email,
@@ -47,7 +44,6 @@ export const ResetPasswordApi = async ({ token, newPassword }: any) => {
     return response;
 }
 
-
 export const CreatePost = async ({ token, postData }: CreatePostType) => {
     const response = await axios.post(
         `${process.env.REACT_APP_BACK_END_URL}/${CreatePostUrl}`,
@@ -61,8 +57,9 @@ export const CreatePost = async ({ token, postData }: CreatePostType) => {
     );
     return response.data;
 };
+
 export const LogoutApi = async ({ token }: any) => {
-    const response:any = await axios.post(
+    const response: any = await axios.post(
         `${process.env.REACT_APP_BACK_END_URL}/${LogoutApiUrl}`,
         {},
         {
