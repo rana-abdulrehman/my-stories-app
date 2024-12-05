@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes, Navigate } from "react-router-dom";
 import AuthGuard from "./authGuard/AuthGuard";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
@@ -26,7 +26,7 @@ const App: React.FC = () => {
                 <Route
                   path="/signup"
                   element={
-                    <AuthGuard>
+                    <AuthGuard allowAuthenticated={false}>
                       <SignupPage />
                     </AuthGuard>
                   }
@@ -34,7 +34,7 @@ const App: React.FC = () => {
                 <Route
                   path="/login"
                   element={
-                    <AuthGuard>
+                    <AuthGuard allowAuthenticated={false}>
                       <LoginPage />
                     </AuthGuard>
                   }
@@ -63,7 +63,15 @@ const App: React.FC = () => {
                     </AuthGuard>
                   }
                 />
-                <Route path="/reset-password" element={<ResetPasswordPage />} /> 
+                <Route 
+                  path="/reset-password"  
+                  element={
+                    <AuthGuard allowAuthenticated={false}>
+                      <ResetPasswordPage />
+                    </AuthGuard>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
           </div>
@@ -76,3 +84,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
