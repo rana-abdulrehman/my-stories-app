@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Notifications from '../../components/Notifications';
 import { UserContext } from '../../context/UserContext';
-import { FetchNotificationsApi } from '../../endPoints/get.endpoints';
-import { FetchPendingPostsApi } from '../../endPoints/post.endPoints';
+import { FetchNotificationsApi, FetchPendingPostsApi } from '../../endPoints/get.endpoints';
+import { } from '../../endPoints/post.endPoints';
 import { ApprovePendingPostsApi, DisapprovePendingPostsApi } from '../../endPoints/put.endPoints';
 
 const AdminBoard: React.FC = () => {

@@ -25,7 +25,6 @@ router.post('/create', authenticate, validate(postSchema), async (req, res) => {
     const post = new Post({ title, content: sanitizedContent, author: req.user._id, status: 'pending' });
     await post.save();
 
-    // Notification admin
     const adminUser = await User.findOne({ role: 'admin' });
     if (adminUser) {
       const notification = new Notification({
@@ -86,7 +85,6 @@ router.put('/approve/:id', authenticate, async (req, res) => {
     const post = await Post.findByIdAndUpdate(id, { status: 'approved' }, { new: true });
     const posts = await Post.find({ status: 'pending' }).populate('author', 'name');
 
-    // notification user
     const notification = new Notification({
       userId: post.author,
       type: 'postApproved',
@@ -111,7 +109,6 @@ router.put('/disapprove/:id', authenticate, async (req, res) => {
     const post = await Post.findByIdAndUpdate(id, { status: 'disapproved' }, { new: true });
     const posts = await Post.find({ status: 'pending' }).populate('author', 'name');
 
-    // notification user
     const notification = new Notification({
       userId: post.author,
       type: 'postDisapproved',

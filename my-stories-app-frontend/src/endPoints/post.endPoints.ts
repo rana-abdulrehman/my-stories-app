@@ -1,16 +1,8 @@
-import { CreatePostType, FetchPendingPostsApiProps, LoginApiProps, LoginResponse, SignupApiProp, Story, Submission } from "@/types";
+import { CreatePostType, LoginApiProps, LoginResponse, SignupApiProp } from "@/types";
 import axios from "axios";
-import { CreatePostUrl, FetchPendingPostsApiUrl, ForgotPasswordApiUrl, LoginApiUrl, LogoutApiUrl, ResetPasswordApiUrl, SignupApiUrl } from "./Urls";
+import { CreatePostUrl, ForgotPasswordApiUrl, LoginApiUrl, LogoutApiUrl, ResetPasswordApiUrl, SignupApiUrl } from "./Urls";
 
-export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps) => {
-    const response = await axios.get<Submission[]>(
-        `${process.env.REACT_APP_BACK_END_URL}/${FetchPendingPostsApiUrl}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return response;
-}
+
 
 export const LoginApi = async ({ email, password }: LoginApiProps) => {
     const response = await axios.post<LoginResponse>(`${process.env.REACT_APP_BACK_END_URL}/${LoginApiUrl}`, {

@@ -1,7 +1,17 @@
 import axios from "axios";
-import { FetchNotificationsApiUrl, FetchStoriesApiUrl, FetchUserPostsUrl } from "./Urls";
-import { Story , Notification, LandingStory } from "@/types";
+import { FetchNotificationsApiUrl, FetchPendingPostsApiUrl, FetchStoriesApiUrl, FetchUserPostsUrl } from "./Urls";
+import { Story , Notification, LandingStory, FetchPendingPostsApiProps, Submission } from "@/types";
 
+
+export const FetchPendingPostsApi = async ({ token }: FetchPendingPostsApiProps) => {
+  const response = await axios.get<Submission[]>(
+      `${process.env.REACT_APP_BACK_END_URL}/${FetchPendingPostsApiUrl}`, {
+      headers: {
+          Authorization: `Bearer ${token}`,
+      },
+  });
+  return response;
+}
 
 export const FetchUserPostsApi = async ({ token }: { token: string | null }) => {
   const response = await axios.get<Story[]>(`${process.env.REACT_APP_BACK_END_URL}/${FetchUserPostsUrl}`, {
